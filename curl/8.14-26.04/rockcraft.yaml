@@ -1,0 +1,33 @@
+name: curl
+
+base: bare
+build-base: devel
+version: '8.14'
+summary: Command line tool for transferring data with URL syntax
+description: |
+    Rock for curl, a command line tool for transferring data with URL syntax,
+    supporting various protocols including HTTP, HTTPS, FTP, and more.
+platforms:
+    amd64:
+
+parts:
+    curl:
+        plugin: nil
+        source: https://github.com/canonical/chisel-releases.git
+        source-type: git
+        source-branch: ubuntu-25.10
+        override-build: |
+            chisel cut --release ./ --root ${CRAFT_PART_INSTALL} \
+                base-files_base \
+                base-files_release-info \
+                base-files_chisel \
+                curl_bins
+
+    deb-security-manifest:
+        plugin: make
+        after: [curl]
+        source: https://github.com/canonical/rocks-security-manifest
+        source-type: git
+        source-branch: main
+        override-prime: gen_manifest
+
