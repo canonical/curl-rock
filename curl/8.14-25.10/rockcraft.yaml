@@ -1,7 +1,7 @@
 name: curl
 
 base: bare
-build-base: devel
+build-base: ubuntu@25.10
 version: '8.14'
 summary: Command line tool for transferring data with URL syntax
 description: |
@@ -13,15 +13,11 @@ platforms:
 parts:
     curl:
         plugin: nil
-        source: https://github.com/canonical/chisel-releases.git
-        source-type: git
-        source-branch: ubuntu-25.10
-        override-build: |
-            chisel cut --release ./ --root ${CRAFT_PART_INSTALL} \
-                base-files_base \
-                base-files_release-info \
-                base-files_chisel \
-                curl_bins
+        stage-packages:
+            - base-files_release-info
+            - base-files_chisel
+            - curl_bins
+            - ca-certificates_data-with-certs
 
     deb-security-manifest:
         plugin: make
