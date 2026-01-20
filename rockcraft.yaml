@@ -1,0 +1,29 @@
+name: curl
+
+base: bare
+build-base: devel
+version: '8.18'
+summary: Command line tool for transferring data with URL syntax
+description: |
+    Rock for curl, a command line tool for transferring data with URL syntax,
+    supporting various protocols including HTTP, HTTPS, FTP, and more.
+platforms:
+    amd64:
+
+parts:
+    curl:
+        plugin: nil
+        stage-packages:
+            - base-files_release-info
+            - base-files_chisel
+            - curl_bins
+            - ca-certificates_data-with-certs
+
+    deb-security-manifest:
+        plugin: make
+        after: [curl]
+        source: https://github.com/canonical/rocks-security-manifest
+        source-type: git
+        source-branch: main
+        override-prime: gen_manifest
+
