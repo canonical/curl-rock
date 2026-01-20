@@ -37,8 +37,30 @@ jobs:
             echo 'arch-map={"amd64":["ubuntu-24.04"],"arm64":["ubuntu-24.04-arm"]}' >> $GITHUB_OUTPUT
           fi
 
+  # Why do we need this duplicate job and reusable Build-Rock workflow?
+  # - the Build-Rock wf may need an an environment setup that relies on an internal action
+  #   - to call an internal action, the repo must also be internal/private
+  #     - but the OCI Factory is not internal/private, so that internal action cannot be called from there
+  # build-internal:
+  #   needs: [get-runners, read-config]
+  #   if: github.event.repository.visibility != 'public'
+  #   strategy:
+  #     fail-fast: true
+  #     matrix: ${{ fromJSON(needs.read-config.outputs.build-matrix) }}
+  #   uses: canonical/oci-factory-internal/.github/workflows/Build-Rock.yaml@main
+  #   with:
+  #     rock-repo: ${{ github.repository }}
+  #     rock-repo-commit: ${{ github.ref }}
+  #     rockfile-directory: ${{ matrix.directory }}
+  #     oci-archive-name: ${{ matrix.artifact-name }}
+  #     arch-map: ${{ needs.get-runners.outputs.arch-map }}
+  #   secrets:
+  #     host-github-token: ${{ secrets.GITHUB_TOKEN }}
+  #     source-github-token: ${{ secrets.REPO_CLONER_TOKEN }}
+
   build:
     needs: [get-runners, read-config]
+    if: github.event.repository.visibility == 'public'
     strategy:
       matrix: ${{ fromJSON(needs.read-config.outputs.build-matrix) }}
     uses: canonical/oci-factory/.github/workflows/Build-Rock.yaml@main
@@ -48,10 +70,16 @@ jobs:
       rockfile-directory: ${{ matrix.directory }}
       oci-archive-name: ${{ matrix.artifact-name }}
       arch-map: ${{ needs.get-runners.outputs.arch-map }}
-      rockcraft-test: ${{ matrix.rock.test }}
+      rockcraft-test: ${{ matrix.run-tests }}
 
   test:
     needs: [read-config, build]
+    # Uncomment these lines if using build-internal job and remove the line above
+    # needs: [read-config, build, build-internal] 
+    # if: |
+    #   always() && needs.read-config.result == 'success' &&
+    #   (needs.build-internal.result == 'success' && needs.build.result == 'skipped') ||
+    #   (needs.build-internal.result == 'skipped' && needs.build.result == 'success')
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.read-config.outputs.build-matrix) }}
@@ -61,6 +89,13 @@ jobs:
 
   upload-ghcr:
     needs: [read-config, test]
+    # Note: the !cancelled() is required to workaround the job being skipped
+    # due to a skipped job in the indirect dependency chain:
+    # https://github.com/orgs/community/discussions/25224
+    if: |
+      github.event_name != 'pull_request' && !cancelled() && !failure() &&
+      github.ref == 'refs/heads/main' &&
+      needs.read-config.outputs.ghcr-upload == 'true'
     strategy:
       matrix: ${{ fromJSON(needs.read-config.outputs.build-matrix) }}
       fail-fast: false
@@ -80,6 +115,13 @@ jobs:
 
   upload-registries:
     needs: [read-config, test]
+    # Note: the !cancelled() is required to workaround the job being skipped
+    # due to a skipped job in the indirect dependency chain:
+    # https://github.com/orgs/community/discussions/25224
+    if: |
+      github.event_name != 'pull_request' && !cancelled() && !failure() &&
+      github.ref == 'refs/heads/main' &&
+      needs.read-config.outputs.upload-matrix != '{"include": []}'
     strategy:
       matrix: ${{ fromJSON(needs.read-config.outputs.upload-matrix) }}
       fail-fast: false
