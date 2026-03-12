@@ -30,6 +30,24 @@ jobs:
             echo 'arch-map={"amd64":["ubuntu-24.04"],"arm64":["ubuntu-24.04-arm"]}' >> $GITHUB_OUTPUT
           fi
 
+      # TODO: remove once the pro-feature is stable in rockcraft
+      # Warn the user if using tests in a pro enabled build
+      - name: Check Pro and Test Incompatibility
+        run: |
+          build_matrix='${{ steps.read-ci-config.outputs.build-matrix }}'
+
+          # Use jq to iterate over the 'include' array
+          echo "$build_matrix" | jq -c '.include[]' | while read -r row; do
+            directory=$(echo "$row" | jq -r '.["directory"] // "unknown"')
+            pro_services=$(echo "$row" | jq -r '.["pro-services"] // ""')
+            run_tests=$(echo "$row" | jq -r '.["run-tests"] // "false"')
+
+            if [[ -n "$pro_services" && "$run_tests" == "true" ]]; then
+              echo "::warning::Tests for Pro Services are currently not supported. Rockcraft tests will be skipped for ${directory}."
+            fi
+          done
+
+
   build:
     needs: [prepare]
     strategy:
@@ -42,8 +60,11 @@ jobs:
       oci-archive-name: ${{ matrix.artifact-name }}
       arch-map: ${{ needs.prepare.outputs.arch-map }}
       rockcraft-test: ${{ matrix.run-tests }}
+      pro-services: ${{ matrix.pro-services }}
     secrets:
       source-github-token: ${{ secrets.REPO_CLONER_TOKEN }}
+      pro-token: ${{ secrets[matrix.pro-token] }}
+      pro-artifact-passphrase: ${{ secrets[matrix.pro-artifact-passphrase] }}
 
 
   test:
@@ -54,6 +75,8 @@ jobs:
     uses: canonical/oci-factory/.github/workflows/Test-Rock.yaml@main
     with:
       oci-archive-name: ${{ matrix.artifact-name }}
+    secrets:
+      pro-artifact-passphrase: ${{ secrets[matrix.pro-artifact-passphrase] }}
 
 
   upload-ghcr:
@@ -69,7 +92,13 @@ jobs:
     permissions:
       packages: write
     steps:
+      - name: Pre-Check Pro Enabled Rocks
+        if: ${{ github.event.repository.visibility == 'public' && matrix.pro-services != '' }}
+        run: |
+          echo "::warning::Uploading Pro enabled rocks to GHCR is not allowed for public repositories."
+      
       - name: Upload Rock to GHCR
+        if: ${{ github.event.repository.visibility != 'public' || matrix.pro-services == '' }}
         uses: canonical/oci-factory/.github/actions/upload-rock@main
         with:
           artifact_name: ${{ matrix.artifact-name }}
@@ -78,6 +107,7 @@ jobs:
           registry: ghcr.io/${{ github.repository }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          decrypt-passphrase: ${{ secrets[matrix.pro-artifact-passphrase] }}
 
 
   upload-registries:
@@ -115,6 +145,7 @@ jobs:
           registry: ${{ matrix.registry-uri }}
           username: AWS
           password: ${{ steps.get-ecr-token.outputs.aws-session-token }}
+          decrypt-passphrase: ${{ secrets[matrix.pro-artifact-passphrase] }}
 
       - name: Upload Rock to Registry
         uses: canonical/oci-factory/.github/actions/upload-rock@main
@@ -126,3 +157,4 @@ jobs:
           registry: ${{ matrix.registry-uri }}
           username: ${{ secrets[matrix.registry-auth-username] }}
           password: ${{ secrets[matrix.registry-auth-password] }}
+          decrypt-passphrase: ${{ secrets[matrix.pro-artifact-passphrase] }}
