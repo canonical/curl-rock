@@ -1,7 +1,7 @@
 name: curl
 
 base: bare
-build-base: devel
+build-base: ubuntu@26.04
 version: '8.18'
 summary: Command line tool for transferring data with URL syntax
 description: |
