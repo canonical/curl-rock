@@ -29,3 +29,15 @@ images:
   #   registries:
   #     - docker.io
   #     - rocksdev-ecr-public
+
+  ## Example of specifying pro-services with custom config
+  # - directory: "my-rock-name/0.1-24.04"
+  #   pro:
+  #     services:
+  #       - esm-apps
+  #       - esm-infra
+  #     config:
+  #       token: secrets.MY_PRO_TOKEN                    # @@@@@@ DO NOT PUT ACTUAL CREDENTIALS HERE @@@@@@
+  #       artifact-passphrase: secrets.MY_PASSPHRASE     # @@@@@@ DO NOT PUT ACTUAL CREDENTIALS HERE @@@@@@
+  #   registries:
+  #   ...
