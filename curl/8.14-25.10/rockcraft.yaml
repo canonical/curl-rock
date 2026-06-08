@@ -9,6 +9,9 @@ description: |
     supporting various protocols including HTTP, HTTPS, FTP, and more.
 platforms:
     amd64:
+    arm64:
+    ppc64el:
+    s390x:
 
 parts:
     curl:
