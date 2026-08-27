@@ -23,10 +23,10 @@ suites:
       sudo apt remove --yes retry
 
       # Load the rock into docker
-      sudo rockcraft.skopeo --insecure-policy copy "oci-archive:$CRAFT_ARTIFACT" docker-daemon:curl:latest
+      sudo rockcraft.skopeo --insecure-policy copy "oci-archive:$CRAFT_ARTIFACT" docker-daemon:curl:8.14-25.10
 
     restore: |
-      docker image rm --force curl:latest
+      docker image rm --force curl:8.14-25.10
 
 exclude:
   - .git
