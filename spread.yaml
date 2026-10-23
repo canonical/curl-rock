@@ -1,4 +1,4 @@
-project: curl-rock
+project: curl:8.14-25.10
 
 backends:
   craft:
