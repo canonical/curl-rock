@@ -9,5 +9,5 @@ repository.
 
 ## Available versions
 
-* ~~[curl 8.14 (Ubuntu 25.10)](./curl/8.14-25.10/rockcraft.yaml)~~ EOL
-* [curl 8.18 (Ubuntu 26.04)](./curl/8.18-26.04/rockcraft.yaml)
+* ~~[curl 8.14 (Ubuntu 25.10)](https://github.com/canonical/curl-rock/tree/8.14-25.10)~~ EOL
+* [curl 8.18 (Ubuntu 26.04)](https://github.com/canonical/curl-rock/tree/8.18-26.04)

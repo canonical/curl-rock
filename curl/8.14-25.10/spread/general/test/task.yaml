@@ -1,6 +1,0 @@
-summary: test the curl rock
-
-execute: |
-  docker run --rm curl:8.14-25.10 exec curl --version
-
-  docker run --rm curl:8.14-25.10 exec curl https://ubuntu.com/containers | grep chisel
