@@ -1,4 +1,4 @@
-project: curl:devel
+project: curl:8.20-26.10
 
 backends:
   craft:
@@ -23,10 +23,10 @@ suites:
       sudo apt remove --yes retry
 
       # Load the rock into docker
-      sudo rockcraft.skopeo --insecure-policy copy "oci-archive:$CRAFT_ARTIFACT" docker-daemon:curl:devel
+      sudo rockcraft.skopeo --insecure-policy copy "oci-archive:$CRAFT_ARTIFACT" docker-daemon:curl:8.20-26.10
 
     restore: |
-      docker image rm --force curl:devel
+      docker image rm --force curl:8.20-26.10
 
 exclude:
   - .git
