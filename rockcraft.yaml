@@ -1,7 +1,8 @@
 name: curl
 
 base: bare
-build-base: ubuntu@26.10
+# TODO: Update once 26.10 is stabilized
+build-base: devel
 version: '8.20'
 summary: Command line tool for transferring data with URL syntax
 description: |
@@ -16,11 +17,22 @@ platforms:
 parts:
     curl:
         plugin: nil
-        stage-packages:
-            - base-files_release-info
-            - base-files_chisel
-            - curl_bins
-            - ca-certificates_data-with-certs
+
+        # TODO: Uncomment once 26.10 is stabilized
+        # stage-packages:
+        #     - base-files_release-info
+        #     - base-files_chisel
+        #     - curl_bins
+        #     - ca-certificates_data-with-certs
+
+        # TODO: Remove once 26.10 is stabilized
+        override-build: |
+          craftctl default
+          chisel cut --release ubuntu-26.10 --root ${CRAFT_PART_INSTALL} \
+            base-files_release-info \
+            curl_bins \
+            ca-certificates_data-with-certs
+
 
     deb-security-manifest:
         plugin: make
